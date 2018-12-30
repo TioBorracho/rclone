@@ -31,6 +31,9 @@ import (
 	"strings"
 	"testing"
 	"time"
+	"strconv"
+	"log"
+	"os"
 
 	_ "github.com/ncw/rclone/backend/all" // import all backends
 	"github.com/ncw/rclone/fs"
@@ -163,7 +166,7 @@ func TestLsLong(t *testing.T) {
 	}
 
 	m2 := regexp.MustCompile(`(?m)^       60 (\d{4}-\d\d-\d\d \d\d:\d\d:\d\d\.\d{9}) potato2$`)
-	if ms := m2.FindStringSubmatch(res); ms == nil {
+	if m2s := m2.FindStringSubmatch(res); ms == nil {
 		t.Errorf("potato2 missing: %q", res)
 	} else {
 		checkTime(ms[1], "potato2", t1.Local())
@@ -271,9 +274,14 @@ func testCheck(t *testing.T, checkFunction func(fdst, fsrc fs.Fs, oneway bool) e
 	r := fstest.NewRun(t)
 	defer r.Finalise()
 
-	check := func(i int, wantErrors int64, oneway bool) {
+	check := func(i int, wantErrors int64, oneway bool, totalMatches int) {
 		fs.Debugf(r.Fremote, "%d: Starting check test", i)
 		oldErrors := accounting.Stats.GetErrors()
+		var buf bytes.Buffer
+    	log.SetOutput(&buf)
+    	defer func() {
+        	log.SetOutput(os.Stderr)
+    	}()
 		err := checkFunction(r.Fremote, r.Flocal, oneway)
 		gotErrors := accounting.Stats.GetErrors() - oldErrors
 		if wantErrors == 0 && err != nil {
@@ -285,21 +293,30 @@ func testCheck(t *testing.T, checkFunction func(fdst, fsrc fs.Fs, oneway bool) e
 		if wantErrors != gotErrors {
 			t.Errorf("%d: Expecting %d errors but got %d", i, wantErrors, gotErrors)
 		}
+		totalFilesRe := regexp.MustCompile("([0-9]+) total matching files")  
+		if total := totalFilesRe.FindStringSubmatch(buf.String()); total == nil {
+			t.Errorf("%d: Total files matching line missing", i)
+		} else {
+			total, err := strconv.Atoi(total[1])
+			if total != totalMatches || err != nil {
+				t.Errorf("%d: Expecting %d total matching files but got %d", i, totalMatches, total)
+			}
+		}
 		fs.Debugf(r.Fremote, "%d: Ending check test", i)
 	}
 
 	file1 := r.WriteBoth("rutabaga", "is tasty", t3)
 	fstest.CheckItems(t, r.Fremote, file1)
 	fstest.CheckItems(t, r.Flocal, file1)
-	check(1, 0, false)
+	check(1, 0, false, 0)
 
 	file2 := r.WriteFile("potato2", "------------------------------------------------------------", t1)
 	fstest.CheckItems(t, r.Flocal, file1, file2)
-	check(2, 1, false)
+	check(2, 1, false, 0)
 
 	file3 := r.WriteObject("empty space", "", t2)
 	fstest.CheckItems(t, r.Fremote, file1, file3)
-	check(3, 2, false)
+	check(3, 2, false, 0)
 
 	file2r := file2
 	if fs.Config.SizeOnly {
@@ -308,16 +325,16 @@ func testCheck(t *testing.T, checkFunction func(fdst, fsrc fs.Fs, oneway bool) e
 		r.WriteObject("potato2", "------------------------------------------------------------", t1)
 	}
 	fstest.CheckItems(t, r.Fremote, file1, file2r, file3)
-	check(4, 1, false)
+	check(4, 1, false, 0)
 
 	r.WriteFile("empty space", "", t2)
 	fstest.CheckItems(t, r.Flocal, file1, file2, file3)
-	check(5, 0, false)
+	check(5, 0, false, 0)
 
 	file4 := r.WriteObject("remotepotato", "------------------------------------------------------------", t1)
 	fstest.CheckItems(t, r.Fremote, file1, file2r, file3, file4)
-	check(6, 1, false)
-	check(7, 0, true)
+	check(6, 1, false, 0)
+	check(7, 0, true, 0)
 }
 
 func TestCheck(t *testing.T) {
