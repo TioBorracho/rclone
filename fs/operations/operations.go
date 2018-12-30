@@ -572,7 +572,7 @@ type checkMarch struct {
 	noHashes        int32
 	srcFilesMissing int32
 	dstFilesMissing int32
-	matches			int32
+	matches         int32
 }
 
 // DstOnly have an object which is in the destination only
@@ -709,7 +709,7 @@ func CheckFn(fdst, fsrc fs.Fs, check checkFn, oneway bool) error {
 		fs.Logf(fdst, "%d hashes could not be checked", c.noHashes)
 	}
 	if c.matches > 0 {
-		fs.Logf(fdst, "%d total matching files", c.matches)	
+		fs.Logf(fdst, "%d matching files", c.matches)	
 	}
 	if c.differences > 0 {
 		return errors.Errorf("%d differences found", c.differences)
