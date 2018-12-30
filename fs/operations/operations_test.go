@@ -166,7 +166,7 @@ func TestLsLong(t *testing.T) {
 	}
 
 	m2 := regexp.MustCompile(`(?m)^       60 (\d{4}-\d\d-\d\d \d\d:\d\d:\d\d\.\d{9}) potato2$`)
-	if m2s := m2.FindStringSubmatch(res); ms == nil {
+	if ms := m2.FindStringSubmatch(res); ms == nil {
 		t.Errorf("potato2 missing: %q", res)
 	} else {
 		checkTime(ms[1], "potato2", t1.Local())
@@ -293,7 +293,7 @@ func testCheck(t *testing.T, checkFunction func(fdst, fsrc fs.Fs, oneway bool) e
 		if wantErrors != gotErrors {
 			t.Errorf("%d: Expecting %d errors but got %d", i, wantErrors, gotErrors)
 		}
-		totalFilesRe := regexp.MustCompile("([0-9]+) total matching files")  
+		totalFilesRe := regexp.MustCompile("([0-9]+) matching files")  
 		if total := totalFilesRe.FindStringSubmatch(buf.String()); total == nil {
 			t.Errorf("%d: Total files matching line missing", i)
 		} else {
@@ -308,15 +308,15 @@ func testCheck(t *testing.T, checkFunction func(fdst, fsrc fs.Fs, oneway bool) e
 	file1 := r.WriteBoth("rutabaga", "is tasty", t3)
 	fstest.CheckItems(t, r.Fremote, file1)
 	fstest.CheckItems(t, r.Flocal, file1)
-	check(1, 0, false, 0)
+	check(1, 0, false, 1)
 
 	file2 := r.WriteFile("potato2", "------------------------------------------------------------", t1)
 	fstest.CheckItems(t, r.Flocal, file1, file2)
-	check(2, 1, false, 0)
+	check(2, 1, false, 1)
 
 	file3 := r.WriteObject("empty space", "", t2)
 	fstest.CheckItems(t, r.Fremote, file1, file3)
-	check(3, 2, false, 0)
+	check(3, 2, false, 1)
 
 	file2r := file2
 	if fs.Config.SizeOnly {
@@ -325,16 +325,16 @@ func testCheck(t *testing.T, checkFunction func(fdst, fsrc fs.Fs, oneway bool) e
 		r.WriteObject("potato2", "------------------------------------------------------------", t1)
 	}
 	fstest.CheckItems(t, r.Fremote, file1, file2r, file3)
-	check(4, 1, false, 0)
+	check(4, 1, false, 2)
 
 	r.WriteFile("empty space", "", t2)
 	fstest.CheckItems(t, r.Flocal, file1, file2, file3)
-	check(5, 0, false, 0)
+	check(5, 0, false, 3)
 
 	file4 := r.WriteObject("remotepotato", "------------------------------------------------------------", t1)
 	fstest.CheckItems(t, r.Fremote, file1, file2r, file3, file4)
-	check(6, 1, false, 0)
-	check(7, 0, true, 0)
+	check(6, 1, false, 3)
+	check(7, 0, true, 3)
 }
 
 func TestCheck(t *testing.T) {
