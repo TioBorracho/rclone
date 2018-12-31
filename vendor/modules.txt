@@ -63,7 +63,7 @@ github.com/cpuguy83/go-md2man/md2man
 github.com/davecgh/go-spew/spew
 # github.com/djherbis/times v1.1.0
 github.com/djherbis/times
-# github.com/dropbox/dropbox-sdk-go-unofficial v5.0.1-0.20181205034806-56e5f6595305+incompatible
+# github.com/dropbox/dropbox-sdk-go-unofficial v5.4.0+incompatible
 github.com/dropbox/dropbox-sdk-go-unofficial/dropbox
 github.com/dropbox/dropbox-sdk-go-unofficial/dropbox/auth
 github.com/dropbox/dropbox-sdk-go-unofficial/dropbox/common
@@ -97,7 +97,7 @@ github.com/kr/fs
 github.com/mattn/go-runewidth
 # github.com/ncw/go-acd v0.0.0-20171120105400-887eb06ab6a2
 github.com/ncw/go-acd
-# github.com/ncw/swift v1.0.42
+# github.com/ncw/swift v1.0.43
 github.com/ncw/swift
 # github.com/nsf/termbox-go v0.0.0-20181027232701-60ab7e3d12ed
 github.com/nsf/termbox-go
